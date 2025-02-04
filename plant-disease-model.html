@@ -4,32 +4,56 @@
   <title>Plant Disease Detection</title>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
   <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    img {
+      max-width: 300px;
+      margin-top: 20px;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
   <h1>Plant Disease Detection</h1>
   <p>Select an image of a plant leaf to detect diseases:</p>
   <input type="file" id="imageUpload" accept="image/*" />
+  <img id="uploadedImage" alt="Uploaded Image" />
   <p id="result">Model loading...</p>
+
   <script>
-    const modelURL = "plant-disease-model\model.json""; // Path to your model.json file
+    // Path to your model.json file
+    const modelURL = ".plant-disease-model/model.json";
 
     let model;
     async function loadModel() {
       model = await tmImage.load(modelURL);
-      document.getElementById("result").innerText = "Model Loaded!";
+      document.getElementById("result").innerText = "Model Loaded! Ready to detect.";
     }
 
     async function predict(file) {
-      const image = document.createElement("img");
+      // Display the uploaded image
+      const image = document.getElementById("uploadedImage");
       image.src = URL.createObjectURL(file);
       await image.decode();
+
+      // Make predictions using the model
       const predictions = await model.predict(image);
 
-      let resultText = "Detection Results:\n";
-      predictions.forEach((prediction) => {
-        resultText += `${prediction.className}: ${(prediction.probability * 100).toFixed(2)}%\n`;
+      // Find the highest probability prediction
+      const bestPrediction = predictions.reduce((prev, current) => {
+        return prev.probability > current.probability ? prev : current;
       });
 
+      // Display the name of the disease
+      const resultText = `Detected: ${bestPrediction.className} (${(bestPrediction.probability * 100).toFixed(2)}%)`;
       document.getElementById("result").innerText = resultText;
     }
 
